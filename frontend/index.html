@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureShare</title>
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #1d1b26;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .main {
+            background: #2d2a3a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            color: #ffcc00;
+            text-shadow: 2px 2px 0px #a67c00;
+        }
+
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 8px;
+            width: 100%;
+        }
+
+        input[type="submit"] {
+            background-color: #ff5733;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #c70039;
+        }
+
+        .info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #ffcc00;
+        }
+
+        .link-box {
+            background: #333;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #ffcc00;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            font-size: 12px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: fadeOut 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <h1>SecureShare</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="file" name="file"/><br>
+            <input type="submit" value="Upload" id="uploadButton"/><br>
+            <div class="info">Files will be automatically deleted in 1 hour</div>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <div class="footer">A creation of rghdrizzle | Files auto-delete in 1 hour</div>
+
+    <audio id="clickSound" src="https://www.myinstants.com/media/sounds/button-click.mp3"></audio>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            document.getElementById("clickSound").play();
+            const file = document.getElementById("file").files[0];
+            if (!file) {
+                document.getElementById("result").innerText = "Please select a file.";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("http://localhost:3333/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Upload failed.");
+
+                const data = await response.json(); 
+                if (data.fileUrl) { 
+                    document.getElementById("result").innerHTML = 
+                        `<div class='link-box'>
+                            <span>${data.fileUrl}</span>
+                            <button class='copy-btn' onclick='copyLink("${data.fileUrl}")'>Copy</button>
+                            <div class='info'>This link will expire in 1 hour</div>
+                        </div>`;
+                } else {
+                    throw new Error("Invalid response format");
+                }
+            } catch (error) {
+                document.getElementById("result").innerText = "Error: " + error.message;
+            }
+        });
+
+        function copyLink(link) {
+            navigator.clipboard.writeText(link);
+            alert("Link copied to clipboard!");
+        }
+
+        document.addEventListener("mousemove", (event) => {
+            let particle = document.createElement("div");
+            particle.className = "particle";
+            document.body.appendChild(particle);
+            
+            const colors = ["#ff5733", "#ffcc00", "#33ff57", "#3399ff", "#cc33ff"];
+            particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+            
+            particle.style.left = `${event.clientX}px`;
+            particle.style.top = `${event.clientY}px`;
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 600);
+        });
+    </script>
+</body>
+</html>
