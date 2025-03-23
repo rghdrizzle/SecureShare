@@ -142,7 +142,7 @@
             formData.append("file", file);
 
             try {
-                const response = await fetch("http://localhost:3333/upload", {
+                const response = await fetch("https://app-secureshare-backend-01-crdsg6bubnbjfffk.canadacentral-01.azurewebsites.net/upload", {
                     method: "POST",
                     body: formData
                 });
